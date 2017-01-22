@@ -27,6 +27,7 @@ class Main:
         self.sigma = 11.87
         self.treshold = 40000 #self.mean + 5*self.sigma
         self.totalgalaxies = 0
+        self.overlap = 0
         self.call()
 #        self.x = ma.compressed(self.data)
 
@@ -59,33 +60,38 @@ class Main:
         """
         ymax, xmax, count = self.findmax()
         if (count> self.treshold):
-            self.totalgalaxies +=1
+        
+           
             #a, b = 2300, 700 # These are the coordinates of the center where a is the y coordinate and b is x for y,x defined in ds9
 
             r = 8 # radius
 
             y,x = np.ogrid[-ymax:4611-ymax, -xmax:2570-xmax] # I dont really know what ogrid does. Should read later
             mask1 = x*x + y*y <= r*r # Check the circle equation, YaY!!
-            self.totalcount = np.sum(self.data[mask1])
-            self.totalpixels = len(self.data[mask1])
-            
-            r=10
-            #y,x = np.ogrid[-ymax:4611-ymax, -xmax:2570-xmax] # I dont really know what ogrid does. Should read later
-            mask2 = x*x + y*y <= r*r # Check the circle equation, YaY!!
-            self.totalbackcount = np.sum(self.data[mask2])
-            self.totalbackpixels = len(self.data[mask2])
-            #The below is the local background 
-            self.avbackground = (self.totalbackcount-self.totalcount)/(self.totalbackpixels-self.totalpixels)
-            # This is the total count of the galaxy
-            self.nobackcount = self.totalcount -self.totalpixels*self.avbackground # We need to subtract the background 
-            print (self.nobackcount)
-            
-            self.data[mask1] = 0  
+            if (self.data[mask1].any !=0):
+                self.totalgalaxies +=1
+                self.totalcount = np.sum(self.data[mask1])
+                self.totalpixels = len(self.data[mask1])
+                
+                r=10
+                #y,x = np.ogrid[-ymax:4611-ymax, -xmax:2570-xmax] # I dont really know what ogrid does. Should read later
+                mask2 = x*x + y*y <= r*r # Check the circle equation, YaY!!
+                self.totalbackcount = np.sum(self.data[mask2])
+                self.totalbackpixels = len(self.data[mask2])
+                #The below is the local background 
+                self.avbackground = (self.totalbackcount-self.totalcount)/(self.totalbackpixels-self.totalpixels)
+                # This is the total count of the galaxy
+                self.nobackcount = self.totalcount -self.totalpixels*self.avbackground # We need to subtract the background 
+                print (self.nobackcount)
+                
+                self.data[mask1] = 0
+            else: 
+                self.overlap +=1
             self.apperture()
         else:
             print ("No more points above treshold")
             masked = fits.PrimaryHDU(self.data) # these two lines are all you need. 
-            masked.writeto('After.fits')
+            masked.writeto('After2.fits')
 
     def call(self):
         self.getheader()
